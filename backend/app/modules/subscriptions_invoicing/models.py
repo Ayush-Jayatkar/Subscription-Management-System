@@ -12,10 +12,17 @@ class TaxRule(Base):
 class Subscription(Base):
     __tablename__ = "subscriptions"
     id: Mapped[int] = mapped_column(primary_key=True)
-    number: Mapped[str | None] = mapped_column(String(20), unique=True)
+    number: Mapped[str | None] = mapped_column(
+    "subscription_number",
+    String(20),
+    unique=True
+    )
     customer_id: Mapped[int] = mapped_column(Integer, index=True, nullable=False)
     plan_id: Mapped[int] = mapped_column(Integer, nullable=False)
-    template_id: Mapped[int | None] = mapped_column(Integer)
+    template_id: Mapped[int | None] = mapped_column(
+    "quotation_template_id",
+    Integer
+    )
     start_date: Mapped[date] = mapped_column(Date, nullable=False)
     expiry_date: Mapped[date | None] = mapped_column(Date)
     quotation_valid_until: Mapped[date | None] = mapped_column(Date)
@@ -48,27 +55,95 @@ class SubscriptionStatusHistory(Base):
     changed_by: Mapped[int | None] = mapped_column(Integer)
     changed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     subscription = relationship("Subscription", back_populates="history")
+
 class Invoice(Base):
     __tablename__ = "invoices"
+
     id: Mapped[int] = mapped_column(primary_key=True)
-    number: Mapped[str | None] = mapped_column(String(20), unique=True)
-    subscription_id: Mapped[int] = mapped_column(ForeignKey("subscriptions.id"), index=True, nullable=False)
-    customer_id: Mapped[int] = mapped_column(Integer, index=True, nullable=False)
-    customer_name: Mapped[str] = mapped_column(String(200), nullable=False)
-    customer_email: Mapped[str] = mapped_column(String(254), nullable=False)
+
+    # Python attribute 'number' maps to the real database column.
+    number: Mapped[str | None] = mapped_column(
+        "invoice_number",
+        String(20),
+        unique=True,
+    )
+
+    subscription_id: Mapped[int] = mapped_column(
+        ForeignKey("subscriptions.id"),
+        index=True,
+        nullable=False,
+    )
+
+    customer_id: Mapped[int] = mapped_column(
+        Integer,
+        index=True,
+        nullable=False,
+    )
+
+    customer_name: Mapped[str] = mapped_column(
+        String(200),
+        nullable=False,
+        default="",
+    )
+
+    customer_email: Mapped[str] = mapped_column(
+        String(254),
+        nullable=False,
+        default="",
+    )
+
     billing_period_start: Mapped[date] = mapped_column(Date, nullable=False)
     billing_period_end: Mapped[date] = mapped_column(Date, nullable=False)
     invoice_date: Mapped[date] = mapped_column(Date, nullable=False)
     due_date: Mapped[date] = mapped_column(Date, nullable=False)
-    status: Mapped[str] = mapped_column(String(20), default="DRAFT", nullable=False)
-    subtotal: Mapped[Decimal] = mapped_column(Numeric(12,2), nullable=False)
-    discount_total: Mapped[Decimal] = mapped_column(Numeric(12,2), default=0, nullable=False)
+
+    status: Mapped[str] = mapped_column(
+        String(20),
+        default="DRAFT",
+        nullable=False,
+    )
+
+    subtotal: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    discount_total: Mapped[Decimal] = mapped_column(
+        Numeric(12, 2),
+        default=0,
+        nullable=False,
+    )
+
     discount_description: Mapped[str | None] = mapped_column(Text)
-    tax_total: Mapped[Decimal] = mapped_column(Numeric(12,2), nullable=False)
-    total: Mapped[Decimal] = mapped_column(Numeric(12,2), nullable=False)
-    paid_amount: Mapped[Decimal] = mapped_column(Numeric(12,2), default=0, nullable=False)
-    lines = relationship("InvoiceLine", back_populates="invoice", cascade="all, delete-orphan", lazy="selectin")
-    __table_args__ = (UniqueConstraint("subscription_id", "billing_period_start", "billing_period_end", name="uq_invoice_subscription_period"), Index("ix_invoice_status_due_date", "status", "due_date"))
+
+    tax_total: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+    total: Mapped[Decimal] = mapped_column(Numeric(12, 2), nullable=False)
+
+    paid_amount: Mapped[Decimal] = mapped_column(
+        Numeric(12, 2),
+        default=0,
+        nullable=False,
+    )
+
+    balance_due: Mapped[Decimal] = mapped_column(
+        Numeric(12, 2),
+        default=0,
+        nullable=False,
+    )
+
+    lines = relationship(
+        "InvoiceLine",
+        back_populates="invoice",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+    __table_args__ = (
+        UniqueConstraint(
+            "subscription_id",
+            "billing_period_start",
+            "billing_period_end",
+            name="uq_invoice_subscription_period",
+        ),
+        Index("ix_invoice_status_due_date", "status", "due_date"),
+    )
+
 class InvoiceLine(Base):
     __tablename__ = "invoice_lines"
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -79,6 +154,10 @@ class InvoiceLine(Base):
     unit_price: Mapped[Decimal] = mapped_column(Numeric(12,2), nullable=False)
     discount_amount: Mapped[Decimal] = mapped_column(Numeric(12,2), nullable=False)
     tax_rate: Mapped[Decimal] = mapped_column(Numeric(5,2), nullable=False)
-    line_total: Mapped[Decimal] = mapped_column(Numeric(12,2), nullable=False)
+    line_total: Mapped[Decimal] = mapped_column(
+    "amount",
+    Numeric(12, 2),
+    nullable=False
+    )
     tax_amount: Mapped[Decimal] = mapped_column(Numeric(12,2), nullable=False)
     invoice = relationship("Invoice", back_populates="lines")

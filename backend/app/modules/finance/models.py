@@ -2,6 +2,7 @@ from datetime import datetime
 from sqlalchemy import Date, DateTime, ForeignKey, Index, Integer, Numeric, String, Text, Boolean, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 from app.database import Base
+from sqlalchemy import BigInteger
 
 class Discount(Base):
     __tablename__ = "discounts"
@@ -31,7 +32,7 @@ class DiscountUsage(Base):
     __tablename__ = "discount_usage"
     id: Mapped[int] = mapped_column(primary_key=True)
     discount_id: Mapped[int] = mapped_column(ForeignKey("discounts.id"), nullable=False)
-    invoice_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    invoice_id: Mapped[int] = mapped_column(BigInteger, nullable=False)
     amount: Mapped[float] = mapped_column(Numeric(12,2), nullable=False)
     used_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     __table_args__ = (UniqueConstraint("discount_id","invoice_id",name="uq_discount_invoice"),)
@@ -39,7 +40,7 @@ class DiscountUsage(Base):
 class Payment(Base):
     __tablename__ = "payments"
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
-    invoice_id: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    invoice_id: Mapped[int] = mapped_column(BigInteger, nullable=False, index=True)    
     method: Mapped[str] = mapped_column(String(40), nullable=False)
     amount: Mapped[float] = mapped_column(Numeric(12,2), nullable=False)
     paid_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)

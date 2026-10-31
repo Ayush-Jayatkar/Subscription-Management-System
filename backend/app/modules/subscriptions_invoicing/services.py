@@ -51,7 +51,11 @@ def create_invoice(db,sub,period_start):
         tax=db.get(TaxRule,line.tax_rule_id) if line.tax_rule_id else None; rate=tax.rate_percent if tax and tax.is_active else Decimal("0.00")
         net=money(line.amount-share); tax_amount=money(net*rate/Decimal("100")); tax_total+=tax_amount
         invoice.lines.append(InvoiceLine(product_id=line.product_id,description=line.description,quantity=line.quantity,unit_price=line.unit_price,discount_amount=share,tax_rate=rate,line_total=net,tax_amount=tax_amount))
-    invoice.tax_total=money(tax_total); invoice.total=money(subtotal-discount+tax_total); db.add(invoice); db.flush(); invoice.number=f"INV{invoice.id:05d}"
+    invoice.tax_total = money(tax_total)
+    invoice.total = money(subtotal - discount + tax_total)
+    invoice.balance_due = invoice.total - invoice.paid_amount
+
+    db.add(invoice)
     if quote and discount: integrations.consume_discount(db,quote["discount_id"],invoice.id,discount)
     return invoice
 def run_billing(db,today=None):

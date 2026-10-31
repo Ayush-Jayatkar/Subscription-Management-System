@@ -23,7 +23,7 @@ export default function Dashboard() {
   return (
     <div className="page-content">
       <section className="page-heading">
-        <div><div className="eyebrow">SATURDAY, 31 OCTOBER 2026</div><h1>Good afternoon, Admin <span>✦</span></h1><p>Here&apos;s what&apos;s happening with your subscription business.</p></div>
+        <div><div className="eyebrow"></div><h1>Good afternoon <span>✦</span></h1><p>Here&apos;s what&apos;s happening with your subscription business.</p></div>
         <div className="heading-actions"><button className="button secondary"><Download size={16} /> Export</button><button className="button primary"><CirclePlus size={17} /> New subscription</button></div>
       </section>
 

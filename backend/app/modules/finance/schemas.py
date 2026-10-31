@@ -56,3 +56,4 @@ class FinanceSummary(BaseModel):
     amount_owed:Decimal
     overdue_invoices:int
     note:str
+    
