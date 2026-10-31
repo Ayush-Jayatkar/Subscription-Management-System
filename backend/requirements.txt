@@ -8,3 +8,7 @@ python-jose[cryptography]
 passlib[bcrypt]
 email-validator
 alembic
+python-dateutil==2.9.0.post0
+reportlab==4.4.4
+pytest==8.4.2
+httpx==0.28.1
