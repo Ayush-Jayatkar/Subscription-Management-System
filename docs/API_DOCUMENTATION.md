@@ -1,4 +1,4 @@
-# API documentation
+﻿# API documentation
 
 Base URL: `http://localhost:8000/api/v1`
 
@@ -24,7 +24,7 @@ The following are proposed contracts, not implemented routes. The owner and deta
 
 ## Person 2: Subscriptions & Invoicing
 
-All routes use `/api/v1`. Staff means `admin` or `staff`; admin means `admin` only. Customer routes derive ownership from `X-User-Id` (replaced by Person 1 JWT integration later). Lists use `page=1&page_size=20` (maximum 100) and return `{items,total,page,page_size}`.
+All routes use `/api/v1`. Staff means `admin` or `staff`; admin means `admin` only. Auth: Authorization: Bearer <token> from POST /api/v1/auth/login (Person 1). Roles map to admin | staff | customer. Lists use `page=1&page_size=20` (maximum 100) and return `{items,total,page,page_size}`.
 
 | Method | Path | Role | Key fields / behavior |
 |---|---|---|---|
@@ -55,3 +55,4 @@ All routes use `/api/v1`. Staff means `admin` or `staff`; admin means `admin` on
 | GET | `/me/invoices` | authenticated customer | Current user's non-DRAFT invoices; paginated |
 
 **Person 3 payment handoff:** update `invoice.paid_amount` inside the payment transaction, then call `sync_paid_status(invoice)` to mark the invoice PAID when the total has been covered. Partial payments remain CONFIRMED.
+
