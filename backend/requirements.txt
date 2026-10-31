@@ -4,3 +4,7 @@ SQLAlchemy==2.0.44
 psycopg2-binary==2.9.11
 pydantic-settings==2.11.0
 python-dotenv==1.2.1
+python-jose[cryptography]
+passlib[bcrypt]
+email-validator
+alembic
