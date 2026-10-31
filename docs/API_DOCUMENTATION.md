@@ -21,3 +21,37 @@ The following are proposed contracts, not implemented routes. The owner and deta
 | Person 1 | `/auth`, `/users`, `/customers`, `/products`, `/variants`, `/plans`, `/quotation-templates` | Identity, RBAC, catalog, plans, quotation templates |
 | Person 2 | `/quotations`, `/subscriptions`, `/invoices`, `/tax-rules`, `/me/subscriptions`, `/me/invoices` | Subscription lifecycle, recurring billing, invoices, taxes, customer APIs |
 | Person 3 | `/discounts`, `/payments`, `/finance`, `/reports` | Discount calculation, payment recording, receivables, finance reports |
+
+## Person 2: Subscriptions & Invoicing
+
+All routes use `/api/v1`. Staff means `admin` or `staff`; admin means `admin` only. Customer routes derive ownership from `X-User-Id` (replaced by Person 1 JWT integration later). Lists use `page=1&page_size=20` (maximum 100) and return `{items,total,page,page_size}`.
+
+| Method | Path | Role | Key fields / behavior |
+|---|---|---|---|
+| POST | `/tax-rules` | admin | `name`, `rate_percent`, `is_active`; duplicate name is 409 |
+| GET | `/tax-rules` | staff | List tax rules |
+| PATCH | `/tax-rules/{id}` | admin | Partial tax rule fields |
+| POST | `/quotations/from-template` | staff | `template_id`, `customer_id`, `start_date`, `payment_terms_days` |
+| GET | `/quotations` | staff | Paginated DRAFT and QUOTATION subscriptions |
+| GET | `/quotations/{id}` | staff | Quotation detail with lines and history |
+| POST | `/subscriptions` | staff | `customer_id`, `plan_id`, dates, payment terms, `lines` |
+| GET | `/subscriptions` | staff | Optional `status`, `customer_id`; paginated |
+| GET | `/subscriptions/{id}` | staff or owner | Subscription detail |
+| PATCH | `/subscriptions/{id}` | staff | Edit DRAFT subscription fields |
+| POST | `/subscriptions/{id}/transition` | staff | `{to}` in DRAFT/QUOTATION/CONFIRMED/ACTIVE/CLOSED |
+| POST | `/subscriptions/{id}/close` | staff | Close subscription, subject to plan policy |
+| POST | `/subscriptions/{id}/pause` | staff | Pause ACTIVE subscription if plan permits |
+| POST | `/subscriptions/{id}/resume` | staff | Resume paused subscription |
+| POST | `/subscriptions/{id}/renew` | staff | Extend eligible ACTIVE/CLOSED subscription |
+| POST | `/billing/run` | admin | Run due recurring billing; idempotent response lists created/already billed/auto closed |
+| GET | `/invoices` | staff | Optional `status`, `customer_id`, `overdue`; paginated |
+| POST | `/invoices/from-subscription/{sid}` | staff | Create next invoice for an ACTIVE subscription |
+| GET | `/invoices/{id}` | staff or owner | Invoice snapshot with lines; customers cannot see DRAFT |
+| POST | `/invoices/{id}/confirm` | staff | Confirm DRAFT invoice |
+| POST | `/invoices/{id}/cancel` | staff | Cancel unpaid invoice |
+| POST | `/invoices/{id}/send` | staff | Email PDF or log in development mode |
+| GET | `/invoices/{id}/pdf` | staff or owner | Inline PDF; customers cannot see DRAFT |
+| GET | `/me/subscriptions` | authenticated customer | Current user's subscriptions; paginated |
+| GET | `/me/invoices` | authenticated customer | Current user's non-DRAFT invoices; paginated |
+
+**Person 3 payment handoff:** update `invoice.paid_amount` inside the payment transaction, then call `sync_paid_status(invoice)` to mark the invoice PAID when the total has been covered. Partial payments remain CONFIRMED.
