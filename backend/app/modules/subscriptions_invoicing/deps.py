@@ -16,7 +16,15 @@ def get_current_user(user=Depends(identity_current_user)) -> CurrentUser:
     return CurrentUser(id=user.id, role=normalize_role(user.role))
 
 def require_role(*roles):
-    def dependency(user: CurrentUser = Depends(get_current_user)):
-        if user.role not in roles: raise HTTPException(403, "Insufficient role")
+    def dependency(
+        user: CurrentUser = Depends(get_current_user),
+    ):
+        if user.role not in roles:
+            raise HTTPException(
+                status_code=403,
+                detail="Insufficient role",
+            )
+
         return user
+
     return dependency

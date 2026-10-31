@@ -1,7 +1,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from app.modules.identity_catalog.dependencies import get_current_user
+from app.modules.identity_catalog.dependencies import get_current_user, require_roles
 from app.database import get_db
 from app.modules.identity_catalog.models import User, Customer
 from app.modules.identity_catalog.schemas import (
@@ -9,7 +9,9 @@ from app.modules.identity_catalog.schemas import (
     LoginRequest,
     TokenResponse,
     UserResponse,
+    CreateStaffRequest,
 )
+from app.modules.identity_catalog.roles import UserRole
 from app.modules.identity_catalog.security import (
     hash_password,
     verify_password,
@@ -84,3 +86,34 @@ def get_my_profile(
     current_user: User = Depends(get_current_user),
 ):
     return current_user
+
+@router.post(
+    "/auth/staff",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_roles(UserRole.ADMIN))],
+)
+def create_staff(data: CreateStaffRequest, db: Session = Depends(get_db)):
+    email = data.email.lower()
+    existing = db.query(User).filter(User.email == email).first()
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Email is already registered",
+        )
+
+    staff = User(
+        full_name=data.full_name,
+        email=email,
+        password_hash=hash_password(data.password),
+        role=UserRole.INTERNAL_STAFF,
+        is_active=True,
+    )
+    try:
+        db.add(staff)
+        db.commit()
+        db.refresh(staff)
+        return staff
+    except Exception:
+        db.rollback()
+        raise

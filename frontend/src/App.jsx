@@ -3,6 +3,8 @@ import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
 import Dashboard from './pages/Dashboard'
 import Placeholder from './pages/Placeholder'
+import StaffPage from './pages/StaffPage'
+import { LoginPage, RegisterPage } from './pages/AuthPages'
 import { DiscountsPage, PaymentsPage, FinanceDashboardPage } from './features/finance/FinancePages'
 import SubscriptionsPage from './features/subscriptions-invoicing/SubscriptionsPage'
 import { InvoicesPage } from './features/subscriptions-invoicing/InvoicesPage'
@@ -11,12 +13,25 @@ import { MySubscriptionsPage, MyInvoicesPage } from './features/subscriptions-in
 const pages = [
   ['customers', 'Customers & Access'], ['products', 'Products & Variants'], ['plans', 'Plans'],
   ['quotations', 'Quotation Templates'], ['subscriptions', 'Subscriptions'], ['invoices', 'Invoices'],
-  ['payments', 'Payments'], ['discounts', 'Discount Rules'], ['reports', 'Finance Reports'], ['settings', 'Settings'],
+  ['payments', 'Payments'], ['discounts', 'Discount Rules'], ['reports', 'Finance Reports'],
   ['portal/my-subscriptions', 'My Subscriptions'], ['portal/my-invoices', 'My Invoices'],
 ]
 
-function ApplicationShell() {
+function Protected({ children, roles }) {
+  const { user, loading } = useAuth()
   const location = useLocation()
+  if (loading) return <div className="auth-loading">Loading your workspace…</div>
+  if (!user) return <Navigate to="/login" state={{ from: location }} replace/>
+  if (roles && !roles.includes(user.role)) return <Navigate to="/" replace/>
+  return children
+}
+
+function Workspace() {
+  const { user, loading } = useAuth()
+  const location = useLocation()
+  if (loading) return <div className="auth-loading">Loading your workspace…</div>
+  if (!user) return <Navigate to="/login" state={{ from: location }} replace/>
+
   const current = pages.find(([path]) => `/${path}` === location.pathname)
   const title = location.pathname === '/' ? 'Overview' : current?.[1] || 'Overview'
   return <div className="app-shell"><Sidebar/><main className="main-area"><Topbar title={title}/><Routes>
@@ -32,4 +47,3 @@ function ApplicationShell() {
     <Route path="*" element={<Navigate to="/" replace/>}/>
   </Routes></main></div>
 }
-export default function App(){ return <BrowserRouter><ApplicationShell/></BrowserRouter> }
