@@ -32,6 +32,12 @@ def override_db():
  finally: db.close()
 from app.database import get_db
 app.dependency_overrides[get_db]=override_db
+from fastapi import Header, HTTPException
+from app.modules.subscriptions_invoicing import deps as p2_deps
+def _header_user(x_user_id: int | None = Header(None), x_role: str = Header("customer")):
+    if x_user_id is None: raise HTTPException(401, "Missing X-User-Id")
+    return p2_deps.CurrentUser(id=x_user_id, role=x_role)
+app.dependency_overrides[p2_deps.get_current_user] = _header_user
 client=TestClient(app)
 def headers(uid=2,role="staff"): return {"X-User-Id":str(uid),"X-Role":role}
 def make_sub(customer=3,plan=1,start="2026-10-30",status="DRAFT"):
@@ -87,3 +93,8 @@ def cleanup_test_db():
  yield
  engine.dispose()
  if DB_FILE.exists(): DB_FILE.unlink()
+
+def test_role_mapping_from_identity_module():
+    n = p2_deps.normalize_role
+    assert (n("ADMIN"), n("INTERNAL_STAFF"), n("Internal Staff"), n("STAFF"), n("CUSTOMER")) == ("admin", "staff", "staff", "staff", "customer")
+

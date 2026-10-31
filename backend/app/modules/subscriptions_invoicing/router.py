@@ -143,3 +143,4 @@ def me_subscriptions(page:int=Query(1,ge=1),page_size:int=Query(20,ge=1,le=100),
 @router.get("/me/invoices",response_model=schemas.Page)
 def me_invoices(page:int=Query(1,ge=1),page_size:int=Query(20,ge=1,le=100),db:Session=Depends(get_db),user:CurrentUser=Depends(get_current_user)):
     rows,total=paginate(db,invoices_query(customer_id=user.id,exclude_draft=True),page,page_size); return {"items":rows,"total":total,"page":page,"page_size":page_size}
+

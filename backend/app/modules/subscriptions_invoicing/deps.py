@@ -1,39 +1,19 @@
 ﻿from fastapi import Depends, HTTPException
 from pydantic import BaseModel
-
-from app.modules.identity_catalog.dependencies import (
-    get_current_user as get_identity_user,
-)
-
+from app.modules.identity_catalog.dependencies import get_current_user as identity_current_user
 
 class CurrentUser(BaseModel):
     id: int
-    role: str
+    role: str  # admin | staff | customer
 
+def normalize_role(raw: str) -> str:
+    r = (raw or "").strip().lower().replace(" ", "_")
+    if r.startswith("admin"): return "admin"
+    if "staff" in r: return "staff"
+    return "customer"
 
-ROLE_MAPPING = {
-    "ADMIN": "admin",
-    "INTERNAL_STAFF": "staff",
-    "CUSTOMER": "customer",
-}
-
-
-def get_current_user(
-    identity_user=Depends(get_identity_user),
-):
-    role = ROLE_MAPPING.get(identity_user.role)
-
-    if not role:
-        raise HTTPException(
-            status_code=403,
-            detail="Unsupported user role",
-        )
-
-    return CurrentUser(
-        id=identity_user.id,
-        role=role,
-    )
-
+def get_current_user(user=Depends(identity_current_user)) -> CurrentUser:
+    return CurrentUser(id=user.id, role=normalize_role(user.role))
 
 def require_role(*roles):
     def dependency(
