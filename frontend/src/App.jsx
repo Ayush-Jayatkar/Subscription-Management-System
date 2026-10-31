@@ -1,9 +1,12 @@
-import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+﻿import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
 import Topbar from './components/Topbar'
 import Dashboard from './pages/Dashboard'
 import Placeholder from './pages/Placeholder'
 import { DiscountsPage, PaymentsPage, FinanceDashboardPage } from './features/finance/FinancePages'
+import SubscriptionsPage from './features/subscriptions-invoicing/SubscriptionsPage'
+import { InvoicesPage } from './features/subscriptions-invoicing/InvoicesPage'
+import { MySubscriptionsPage, MyInvoicesPage } from './features/subscriptions-invoicing/PortalPages'
 
 const pages = [
   ['customers', 'Customers & Access'], ['products', 'Products & Variants'], ['plans', 'Plans'],
@@ -21,7 +24,11 @@ function ApplicationShell() {
     <Route path="/discounts" element={<DiscountsPage/>}/>
     <Route path="/payments" element={<PaymentsPage/>}/>
     <Route path="/reports" element={<FinanceDashboardPage/>}/>
-    {pages.filter(([path]) => !['discounts','payments','reports'].includes(path)).map(([path,label]) => <Route key={path} path={`/${path}`} element={<Placeholder title={label} moduleKey={path}/>}/>)}
+    <Route path="/subscriptions" element={<SubscriptionsPage/>}/>
+    <Route path="/invoices" element={<InvoicesPage/>}/>
+    <Route path="/portal/my-subscriptions" element={<MySubscriptionsPage/>}/>
+    <Route path="/portal/my-invoices" element={<MyInvoicesPage/>}/>
+    {pages.filter(([path]) => !['discounts','payments','reports','subscriptions','invoices','portal/my-subscriptions','portal/my-invoices'].includes(path)).map(([path,label]) => <Route key={path} path={`/${path}`} element={<Placeholder title={label} moduleKey={path}/>}/>)}
     <Route path="*" element={<Navigate to="/" replace/>}/>
   </Routes></main></div>
 }
